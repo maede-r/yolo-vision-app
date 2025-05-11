@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8">
+  <title>تشخیص با وب‌کم</title>
+</head>
+<body style="text-align:center; font-family: sans-serif;">
+  <h2>🟢 سیستم تشخیص اشیاء با وب‌کم</h2>
+  
+  <!-- نمایش ویدیو از وب‌کم -->
+  <video id="video" width="400" autoplay></video><br>
+
+  <!-- دکمه برای گرفتن عکس -->
+  <button onclick="captureAndDetect()">📸 عکس بگیر</button><br><br>
+
+  <!-- نمایش تصویر تشخیص داده شده -->
+  <img id="resultImage" width="400"><br>
+
+  <!-- نمایش نام اشیاء شناسایی‌شده -->
+  <p id="labels" style="font-size: 20px;"></p>
+
+  <script>
+    // دسترسی به وب‌کم
+    const video = document.getElementById("video");
+    const canvas = document.createElement("canvas");
+
+    // گرفتن ویدیو از وب‌کم
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
+      });
+
+    // زمانی که دکمه عکس گرفته می‌شود
+    function captureAndDetect() {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext("2d").drawImage(video, 0, 0);
+      const dataURL = canvas.toDataURL("image/jpeg");
+
+      // ارسال درخواست به سرور برای تشخیص
+      fetch("/detect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: dataURL })
+      })
+      .then(response => response.json())
+      .then(data => {
+        // نمایش تصویر و نتایج تشخیص
+        document.getElementById("resultImage").src = data.image;
+        document.getElementById("labels").innerText = "اشیاء شناسایی‌شده: " + data.labels.join(", ");
+      });
+    }
+  </script>
+</body>
+</html>
